@@ -1,54 +1,130 @@
-//! Example: semantic search over a small toy corpus.
+//! Example: semantic search over a realistic mini-corpus.
 //!
-//! In a real application the embeddings would come from a model
-//! (e.g. sentence-transformers via a Python bridge or an ONNX runtime).
-//! Here we hand-craft 8-dimensional embeddings that cluster by topic.
+//! Demonstrates the full workflow:
+//!   1. Encode documents as embeddings (hand-crafted here; replace with a
+//!      real model such as `sentence-transformers` in production)
+//!   2. Index all embeddings into `VectorDB`
+//!   3. Issue several queries and display ranked results
+//!   4. Show how normalising query vectors affects scores
 //!
 //! Run with:  cargo run --example semantic_search
 
-use VectorDB_with_Rust::db::VectorDB;
+use simple_vector_db::db::VectorDB;
+use simple_vector_db::vector::normalize;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "Embeddings" — 8-dimensional, hand-crafted to cluster by topic
+//
+//  Dimension map
+//  ─────────────────────────────────────────────────────
+//  0-1  → systems / low-level programming
+//  2-3  → high-level / scripting languages
+//  4-5  → machine learning / AI
+//  6-7  → web / networking
+// ─────────────────────────────────────────────────────────────────────────────
 
 fn main() {
-    let mut db = VectorDB::new();
+    println!("╔══════════════════════════════════════════════╗");
+    println!("║     Semantic Search Demo — simple-vector-db  ║");
+    println!("╚══════════════════════════════════════════════╝\n");
 
-    // ── Corpus (id, 8-D embedding, original text) ───────────────────────────
-    // Dimensions (rough groupings):
-    //   [0-1] programming  [2-3] data/ML  [4-5] systems  [6-7] web
+    // ── Step 1: define the corpus ────────────────────────────────────────────
+    #[rustfmt::skip]
     let corpus: Vec<(&str, Vec<f32>, &str)> = vec![
-        ("t1", vec![0.9, 0.8, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1], "Rust ownership and borrowing"),
-        ("t2", vec![0.8, 0.7, 0.1, 0.1, 0.3, 0.1, 0.2, 0.1], "Python decorators and generators"),
-        ("t3", vec![0.1, 0.1, 0.9, 0.9, 0.1, 0.1, 0.1, 0.1], "Machine learning with neural networks"),
-        ("t4", vec![0.1, 0.1, 0.8, 0.9, 0.1, 0.2, 0.1, 0.1], "Deep learning and transformers"),
-        ("t5", vec![0.2, 0.1, 0.1, 0.1, 0.9, 0.8, 0.1, 0.1], "Operating system kernel design"),
-        ("t6", vec![0.1, 0.2, 0.1, 0.2, 0.8, 0.9, 0.1, 0.1], "Memory management and virtual memory"),
-        ("t7", vec![0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.9, 0.8], "REST APIs and HTTP protocols"),
-        ("t8", vec![0.2, 0.1, 0.1, 0.1, 0.1, 0.1, 0.8, 0.9], "WebAssembly and browser performance"),
+        // id           embedding (8-D)                                   original text
+        ("doc-01", vec![0.90, 0.85, 0.05, 0.05, 0.10, 0.05, 0.05, 0.05], "Rust memory safety and ownership model"),
+        ("doc-02", vec![0.80, 0.75, 0.10, 0.10, 0.05, 0.05, 0.10, 0.05], "C++ performance and zero-cost abstractions"),
+        ("doc-03", vec![0.10, 0.05, 0.85, 0.90, 0.10, 0.05, 0.10, 0.05], "Python data science and pandas"),
+        ("doc-04", vec![0.05, 0.05, 0.80, 0.85, 0.05, 0.05, 0.10, 0.10], "JavaScript and TypeScript for scripting"),
+        ("doc-05", vec![0.10, 0.10, 0.10, 0.15, 0.90, 0.85, 0.05, 0.05], "Training deep neural networks with backprop"),
+        ("doc-06", vec![0.05, 0.05, 0.15, 0.20, 0.85, 0.90, 0.05, 0.05], "Transformer architecture and self-attention"),
+        ("doc-07", vec![0.05, 0.05, 0.20, 0.20, 0.80, 0.80, 0.05, 0.05], "Gradient descent and loss functions"),
+        ("doc-08", vec![0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.90, 0.85], "HTTP/2 protocol and REST API design"),
+        ("doc-09", vec![0.05, 0.05, 0.05, 0.05, 0.05, 0.10, 0.85, 0.80], "WebSockets and real-time communication"),
+        ("doc-10", vec![0.10, 0.05, 0.05, 0.05, 0.10, 0.05, 0.80, 0.75], "TCP/IP networking fundamentals"),
     ];
 
-    for (id, emb, text) in corpus {
-        db.insert(id.to_string(), emb, Some(text.to_string()));
+    // ── Step 2: build the index ──────────────────────────────────────────────
+    let mut db = VectorDB::with_capacity(corpus.len());
+
+    for (id, emb, text) in &corpus {
+        db.insert(id.to_string(), emb.clone(), Some(text.to_string()));
     }
 
-    println!("Corpus loaded: {} documents\n", db.len());
+    println!("Indexed {} documents.\n", db.len());
 
-    // ── Queries ──────────────────────────────────────────────────────────────
+    // ── Step 3: run semantic queries ─────────────────────────────────────────
+    //
+    // Each query vector lives in the same 8-D space as the corpus.
+    // A real system would pass the query text through the same embedding model
+    // used to embed the corpus.
+
+    #[rustfmt::skip]
     let queries: Vec<(&str, Vec<f32>)> = vec![
-        ("machine learning", vec![0.1, 0.1, 0.9, 0.85, 0.1, 0.1, 0.1, 0.1]),
-        ("systems programming", vec![0.85, 0.75, 0.1, 0.1, 0.3, 0.2, 0.1, 0.1]),
-        ("web development", vec![0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.9, 0.85]),
+        // label                             query vector (raw, not normalised)
+        ("machine learning / neural nets",   vec![0.05, 0.05, 0.10, 0.15, 0.90, 0.88, 0.05, 0.05]),
+        ("low-level systems programming",    vec![0.92, 0.88, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05]),
+        ("web APIs and network protocols",   vec![0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.88, 0.92]),
+        ("scripting and interpreted langs",  vec![0.05, 0.05, 0.88, 0.90, 0.05, 0.05, 0.05, 0.05]),
     ];
 
-    for (label, q) in &queries {
-        println!("Query: \"{}\"\"", label);
-        let results = db.search(q, 3);
+    let top_k = 3;
+
+    for (label, raw_query) in &queries {
+        // Normalise the query so scores are purely directional
+        let query = normalize(raw_query);
+
+        println!("┌─ Query: \"{label}\"");
+
+        let results = db.search(&query, top_k);
         for (i, r) in results.iter().enumerate() {
-            println!(
-                "  {}. score={:.4}  \"{}\"\"",
-                i + 1,
-                r.score,
-                r.record.metadata.as_deref().unwrap_or("—"),
-            );
+            let text = r.record.metadata.as_deref().unwrap_or("—");
+            println!("│  {}. [{:.4}]  {}", i + 1, r.score, text);
         }
-        println!();
+        println!("└─\n");
+    }
+
+    // ── Step 4: demonstrate normalised vs raw query ───────────────────────────
+    println!("─── Score comparison: raw vs normalised query ───────────────\n");
+
+    let raw   = vec![0.05_f32, 0.05, 0.10, 0.15, 0.90, 0.88, 0.05, 0.05];
+    let normd = normalize(&raw);
+
+    println!("Raw query magnitude  : {:.4}", simple_vector_db::vector::magnitude(&raw));
+    println!("Normd query magnitude: {:.4}", simple_vector_db::vector::magnitude(&normd));
+    println!();
+
+    let r_raw   = db.search(&raw, 3);
+    let r_normd = db.search(&normd, 3);
+
+    println!("{:<35}  {:>10}  {:>10}", "doc", "raw score", "normd score");
+    println!("{}", "─".repeat(60));
+    for (rr, rn) in r_raw.iter().zip(r_normd.iter()) {
+        let text = rr.record.metadata.as_deref().unwrap_or("—");
+        // Truncate long text for display
+        let short: String = text.chars().take(33).collect();
+        println!("{:<35}  {:>10.4}  {:>10.4}", short, rr.score, rn.score);
+    }
+
+    println!("\nNote: ranking is identical; only the scale differs slightly");
+    println!("because cosine similarity is scale-invariant by design.\n");
+
+    // ── Step 5: simulate adding a new document ────────────────────────────────
+    println!("─── Inserting a new document mid-session ─────────────────────\n");
+
+    db.insert(
+        "doc-11".to_string(),
+        vec![0.50, 0.45, 0.05, 0.05, 0.88, 0.82, 0.05, 0.05],
+        Some("High-performance ML inference in Rust".to_string()),
+    );
+    println!("Corpus now has {} documents.\n", db.len());
+
+    // Re-run the ML query — new document should appear
+    let ml_query = normalize(&vec![0.05, 0.05, 0.10, 0.15, 0.90, 0.88, 0.05, 0.05]);
+    println!("Re-running ML query after insert:");
+    for (i, r) in db.search(&ml_query, 4).iter().enumerate() {
+        let text = r.record.metadata.as_deref().unwrap_or("—");
+        let marker = if r.record.id == "doc-11" { " ◀ new" } else { "" };
+        println!("  {}. [{:.4}]  {}{}", i + 1, r.score, text, marker);
     }
 }

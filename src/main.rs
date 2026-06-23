@@ -1,48 +1,87 @@
-//! Entry point — a small self-contained demo of the vector database.
+//! Demo binary — exercises the full VectorDB API end-to-end.
 //!
 //! Run with:  cargo run
 
-use VectorDB_with_Rust::db::VectorDB;
+use simple_vector_db::db::VectorDB;
 
 fn main() {
-    println!("=== Simple Vector DB Demo ===\n");
+    println!("╔══════════════════════════════════════╗");
+    println!("║     Simple Vector DB — Rust Demo     ║");
+    println!("╚══════════════════════════════════════╝\n");
 
-    let mut db = VectorDB::new();
+    // ── 1. Build the database ─────────────────────────────────────────────────
+    //
+    // In a real application the vectors would come from an embedding model such
+    // as `sentence-transformers`.  Here we use hand-crafted 6-D vectors whose
+    // values cluster by topic so the similarity results are intuitive:
+    //
+    //  dim 0-1 → programming languages
+    //  dim 2-3 → machine learning / AI
+    //  dim 4-5 → web / networking
+    //
+    let mut db = VectorDB::with_capacity(8);
 
-    // ── Insert some toy 3-D embeddings ──────────────────────────────────────
-    // (In a real application these would come from a model like sentence-transformers)
-    let documents = vec![
-        ("rust-lang",   vec![0.9_f32, 0.1, 0.05], "Rust programming language"),
-        ("python-lang", vec![0.1_f32, 0.9, 0.05], "Python programming language"),
-        ("ml-basics",   vec![0.05_f32, 0.6, 0.8], "Introduction to machine learning"),
-        ("deep-learn",  vec![0.02_f32, 0.5, 0.9], "Deep learning with neural networks"),
-        ("databases",   vec![0.7_f32, 0.2, 0.1],  "Relational databases and SQL"),
+    let corpus: &[(&str, [f32; 6], &str)] = &[
+        ("rust",        [0.95, 0.80, 0.05, 0.05, 0.10, 0.05], "Rust systems programming language"),
+        ("python",      [0.80, 0.70, 0.20, 0.15, 0.10, 0.10], "Python programming language"),
+        ("ml-intro",    [0.10, 0.10, 0.90, 0.85, 0.05, 0.05], "Introduction to machine learning"),
+        ("deep-learn",  [0.05, 0.10, 0.85, 0.95, 0.05, 0.05], "Deep learning and neural networks"),
+        ("transformers",[0.10, 0.15, 0.75, 0.90, 0.10, 0.10], "Transformer architecture and attention"),
+        ("http",        [0.10, 0.05, 0.05, 0.05, 0.90, 0.85], "HTTP protocol and REST APIs"),
+        ("websockets",  [0.10, 0.10, 0.10, 0.05, 0.80, 0.90], "WebSockets and real-time communication"),
+        ("databases",   [0.30, 0.20, 0.20, 0.15, 0.40, 0.35], "Relational databases and SQL"),
     ];
 
-    for (id, emb, meta) in documents {
-        db.insert(id.to_string(), emb, Some(meta.to_string()));
+    for (id, emb, meta) in corpus {
+        db.insert(id.to_string(), emb.to_vec(), Some(meta.to_string()));
     }
 
-    println!("Stored {} documents.\n", db.len());
+    println!("✓ Stored {} documents\n", db.len());
 
-    // ── Query: something close to the ML / deep-learning cluster ────────────
-    let query = vec![0.03_f32, 0.55, 0.85];
-    println!("Query vector: {:?}", query);
-    println!("Top-3 results:\n");
+    // ── 2. Run semantic queries ───────────────────────────────────────────────
 
-    let results = db.search(&query, 3);
-    for (rank, r) in results.iter().enumerate() {
-        println!(
-            "  {}. [score: {:.4}]  id={:<12}  meta={}",
-            rank + 1,
-            r.score,
-            r.record.id,
-            r.record.metadata.as_deref().unwrap_or("—"),
-        );
+    let queries: &[(&str, [f32; 6])] = &[
+        ("machine learning",       [0.05, 0.05, 0.90, 0.90, 0.05, 0.05]),
+        ("systems programming",    [0.95, 0.85, 0.05, 0.05, 0.10, 0.05]),
+        ("real-time web protocols",[0.05, 0.05, 0.05, 0.05, 0.85, 0.95]),
+    ];
+
+    for (label, q) in queries {
+        println!("┌─ Query: \"{label}\"");
+        let results = db.search(q, 3);
+        for (rank, r) in results.iter().enumerate() {
+            println!(
+                "│  {}. score={:.4}  [{}]  {}",
+                rank + 1,
+                r.score,
+                r.record.id,
+                r.record.metadata.as_deref().unwrap_or("—"),
+            );
+        }
+        println!("└─\n");
     }
 
-    // ── Delete a record ──────────────────────────────────────────────────────
-    println!("\nDeleting 'databases'…");
+    // ── 3. Direct lookup ──────────────────────────────────────────────────────
+    println!("── Direct lookup: \"rust\" ─────────────────");
+    match db.get("rust") {
+        Some(rec) => println!("  Found: {rec}"),
+        None      => println!("  Not found"),
+    }
+    println!();
+
+    // ── 4. Delete a record ────────────────────────────────────────────────────
+    println!("── Delete \"databases\" ────────────────────");
     let removed = db.delete("databases");
-    println!("  removed: {}  |  remaining: {}", removed, db.len());
+    println!("  removed={removed}  remaining={}", db.len());
+    println!("  lookup after delete: {:?}\n", db.get("databases"));
+
+    // ── 5. Overwrite (re-embed) ───────────────────────────────────────────────
+    println!("── Overwrite \"rust\" with updated embedding ");
+    let overwritten = db.insert(
+        "rust".to_string(),
+        vec![0.97, 0.82, 0.03, 0.03, 0.08, 0.04],
+        Some("Rust — memory-safe systems language (updated)".to_string()),
+    );
+    println!("  was_overwrite={overwritten}  len still={}", db.len());
+    println!("  new meta: {:?}", db.get("rust").unwrap().metadata);
 }
