@@ -1,4 +1,4 @@
-//! # simple-vector-db
+//! # VectorDB-with-Rust
 //!
 //! A lightweight, **zero-dependency** in-memory vector database for semantic
 //! similarity search, implemented entirely in safe Rust.
@@ -6,7 +6,7 @@
 //! ## Quick start
 //!
 //! ```rust
-//! use simple_vector_db::db::VectorDB;
+//! use VectorDB_with_Rust::db::VectorDB;
 //!
 //! let mut db = VectorDB::new();
 //!

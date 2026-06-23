@@ -2,11 +2,11 @@
 //!
 //! Run with:  cargo run
 
-use simple_vector_db::db::VectorDB;
+use VectorDB_with_Rust::db::VectorDB;
 
 fn main() {
     println!("╔══════════════════════════════════════╗");
-    println!("║     Simple Vector DB — Rust Demo     ║");
+    println!("║           Vector DB — Rust           ║");
     println!("╚══════════════════════════════════════╝\n");
 
     // ── 1. Build the database ─────────────────────────────────────────────────

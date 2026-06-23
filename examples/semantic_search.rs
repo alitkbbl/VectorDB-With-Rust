@@ -9,8 +9,8 @@
 //!
 //! Run with:  cargo run --example semantic_search
 
-use simple_vector_db::db::VectorDB;
-use simple_vector_db::vector::normalize;
+use VectorDB_with_Rust::db::VectorDB;
+use VectorDB_with_Rust::vector::normalize;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // "Embeddings" — 8-dimensional, hand-crafted to cluster by topic
@@ -25,7 +25,7 @@ use simple_vector_db::vector::normalize;
 
 fn main() {
     println!("╔══════════════════════════════════════════════╗");
-    println!("║     Semantic Search Demo — simple-vector-db  ║");
+    println!("║     Semantic Search — VectorDB-with-Rust     ║");
     println!("╚══════════════════════════════════════════════╝\n");
 
     // ── Step 1: define the corpus ────────────────────────────────────────────
@@ -90,8 +90,8 @@ fn main() {
     let raw   = vec![0.05_f32, 0.05, 0.10, 0.15, 0.90, 0.88, 0.05, 0.05];
     let normd = normalize(&raw);
 
-    println!("Raw query magnitude  : {:.4}", simple_vector_db::vector::magnitude(&raw));
-    println!("Normd query magnitude: {:.4}", simple_vector_db::vector::magnitude(&normd));
+    println!("Raw query magnitude  : {:.4}", VectorDB_with_Rust::vector::magnitude(&raw));
+    println!("Normd query magnitude: {:.4}", VectorDB_with_Rust::vector::magnitude(&normd));
     println!();
 
     let r_raw   = db.search(&raw, 3);

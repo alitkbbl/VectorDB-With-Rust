@@ -25,7 +25,7 @@ use crate::vector::cosine_similarity;
 ///
 /// # Example
 /// ```rust
-/// use simple_vector_db::db::VectorDB;
+/// use VectorDB_with_Rust::db::VectorDB;
 ///
 /// let mut db = VectorDB::new();
 ///

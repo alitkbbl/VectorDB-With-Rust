@@ -1,10 +1,10 @@
 //! Integration tests — exercise the public API end-to-end.
 //!
-//! These tests import `simple_vector_db` exactly as an external crate would,
+//! These tests import `VectorDB_with_Rust` exactly as an external crate would,
 //! validating the full stack: types → vector math → database operations.
 
-use simple_vector_db::db::VectorDB;
-use simple_vector_db::vector::{cosine_similarity, magnitude, normalize};
+use VectorDB_with_Rust::db::VectorDB;
+use VectorDB_with_Rust::vector::{cosine_similarity, magnitude, normalize};
 
 const EPS: f32 = 1e-5;
 
