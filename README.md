@@ -1,4 +1,4 @@
-# vectorDB-With-Rust 
+# VectorDB-With-Rust 
 
 <p align="center">
       <img src="banner.png" alt="Project Banner" width="100%">
@@ -19,7 +19,6 @@ Store high-dimensional embeddings, query with cosine similarity, and retrieve th
 - [Project layout](#project-layout)
 - [Running the project](#running-the-project)
 - [Design decisions](#design-decisions)
-- [Extending the project](#extending-the-project)
 
 ---
 
@@ -74,17 +73,7 @@ An embedding is a vector of floating-point numbers that represents the *meaning*
 
 ### 📐 Cosine similarity 
 
-The similarity between two vectors is computed as the cosine of the angle between them:
-
-```
-         a · b
-cos(a,b) = ─────────
-           ‖a‖ · ‖b‖
-```
-
-- **1.0** — identical direction (perfectly similar) ✅
-- **0.0** — orthogonal (no similarity) ⚪
-- **−1.0** — opposite direction ↔️
+The similarity between two vectors is computed as the cosine of the angle between them.
 
 Cosine similarity is **scale-invariant**: a vector and its scaled copy are considered identical. This means embedding magnitude does not affect ranking, only direction does. Pre-normalising your query vectors with `vector::normalize` is a good habit but not required — the math is the same either way.
 
