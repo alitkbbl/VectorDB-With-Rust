@@ -1,5 +1,9 @@
 # vectorDB-With-Rust 
 
+<p align="center">
+      <img src="banner.png" alt="Project Banner" width="100%">
+</p>
+
 A lightweight, **zero-dependency** vector database written in Rust for semantic similarity search.
 
 Store high-dimensional embeddings, query with cosine similarity, and retrieve the top-*k* nearest neighbours — all in-memory, all in safe Rust, with no external crates.
@@ -289,7 +293,7 @@ cargo clippy
 
 ---
 
+## 📄 License 
 
-## License 📄
-
-MIT
+This project is licensed under the **MIT License**.  
+See the `LICENSE` file for more details.
