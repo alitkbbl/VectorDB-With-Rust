@@ -1,0 +1,15 @@
+# Rust build output
+/target/
+
+# Cargo lock (keep for binaries, ignore for libraries)
+# Cargo.lock
+
+# Editor & OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
