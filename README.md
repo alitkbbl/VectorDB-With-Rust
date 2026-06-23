@@ -47,7 +47,7 @@ fn main() {
 
 ---
 
-## 🧠 How it works 
+## ⚙️ How it works 
 
 ### Embeddings
 
@@ -209,7 +209,7 @@ println!("{}", dot_product(&a, &b));      // 3.0
 
 ```bash
 # Clone and enter the project
-git clone <repo-url>
+git clone git@github.com:alitkbbl/VectorDB-With-Rust.git
 cd vectorDB-With-Rust
 
 # Run the built-in demo
