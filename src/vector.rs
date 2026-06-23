@@ -1,43 +1,78 @@
-use crate::error::{Result, VectorDbError};
+//! Low-level vector mathematics.
+//!
+//! All functions operate on `&[f32]` slices so they work with any backing storage.
 
-/// A stored vector: a unique id, an optional human-readable label, and the raw data.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Vector {
-    pub id: u64,
-    pub label: String,
-    pub data: Vec<f32>,
+use std::panic;
+
+/// Compute the dot product of two equal-length vectors.
+///
+/// # Panics
+/// Panics if `a.len() != b.len()`.
+pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
+    assert_eq!(a.len(), b.len(), "vectors must have the same dimension");
+    // TODO: implement
+    todo!("dot_product")
 }
 
-impl Vector {
-    /// Create a new vector. Returns an error if `data` is empty.
-    pub fn new(id: u64, label: impl Into<String>, data: Vec<f32>) -> Result<Self> {
-        if data.is_empty() {
-            return Err(VectorDbError::EmptyVector);
-        }
-        Ok(Self {
-            id,
-            label: label.into(),
-            data,
-        })
+/// Compute the Euclidean magnitude (L2 norm) of a vector.
+pub fn magnitude(v: &[f32]) -> f32 {
+    // TODO: implement
+    todo!("magnitude")
+}
+
+/// Compute the cosine similarity between two vectors.
+///
+/// Returns a value in [−1, 1]:
+/// - `1.0`  → identical direction
+/// - `0.0`  → orthogonal
+/// - `−1.0` → opposite direction
+///
+/// Returns `0.0` when either vector is the zero vector.
+pub fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
+    // TODO: implement
+    todo!("cosine_similarity")
+}
+
+/// Return a unit-length copy of `v` (L2 normalised).
+///
+/// Returns the zero vector unchanged.
+pub fn normalize(v: &[f32]) -> Vec<f32> {
+    // TODO: implement
+    todo!("normalize")
+}
+
+// ---------------------------------------------------------------------------
+// Unit tests
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dot_product_basic() {
+        // TODO: add assertions
     }
 
-    /// Number of dimensions of the vector.
-    pub fn dim(&self) -> usize {
-        self.data.len()
+    #[test]
+    fn test_magnitude_basic() {
+        // TODO: add assertions
     }
 
-    /// The Euclidean (L2) magnitude of the vector.
-    pub fn norm(&self) -> f32 {
-        self.data.iter().map(|x| x * x).sum::<f32>().sqrt()
+    #[test]
+    fn test_cosine_identical_vectors() {
+        // Identical vectors should have similarity ≈ 1.0
+        // TODO: add assertions
     }
 
-    /// Return a unit-length copy of this vector.
-    /// Errors if the vector has zero magnitude.
-    pub fn normalized(&self) -> Result<Vec<f32>> {
-        let n = self.norm();
-        if n == 0.0 {
-            return Err(VectorDbError::ZeroNorm);
-        }
-        Ok(self.data.iter().map(|x| x / n).collect())
+    #[test]
+    fn test_cosine_orthogonal_vectors() {
+        // Orthogonal vectors should have similarity ≈ 0.0
+        // TODO: add assertions
+    }
+
+    #[test]
+    fn test_normalize_unit_length() {
+        // Normalised vector should have magnitude ≈ 1.0
+        // TODO: add assertions
     }
 }

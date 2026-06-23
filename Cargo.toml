@@ -1,14 +1,19 @@
 [package]
-name = "simple_vector_db"
-version = "0.1.0"
-edition = "2021"
-description = "A lightweight in-memory vector database for semantic search"
-license = "MIT"
+name        = "VectorDB-with-Rust"
+version     = "0.1.0"
+edition     = "2021"
+description = "Lightweight in-memory vector database with cosine similarity search"
 
 [lib]
-name = "simple_vector_db"
+name = "VectorDB_with_Rust"
 path = "src/lib.rs"
 
 [[bin]]
-name = "simple_vector_db"
+name = "VectorDB-with-Rust"
 path = "src/main.rs"
+
+[dependencies]
+# No external deps — pure Rust standard library only
+
+[dev-dependencies]
+# nothing extra needed for tests
