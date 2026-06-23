@@ -10,18 +10,6 @@ Store high-dimensional embeddings, query with cosine similarity, and retrieve th
 
 ---
 
-## Table of contents
-
-- [Features](#features)
-- [Quick start](#quick-start)
-- [How it works](#how-it-works)
-- [API reference](#api-reference)
-- [Project layout](#project-layout)
-- [Running the project](#running-the-project)
-- [Design decisions](#design-decisions)
-
----
-
 ## 🔧 Features 
 
 -  **In-memory storage** — `HashMap`-backed, O(1) insert, delete, and direct lookup
@@ -71,13 +59,13 @@ An embedding is a vector of floating-point numbers that represents the *meaning*
 "HTTP protocol"     →  [0.02, 0.05, 0.04, ...]   ← far from the above
 ```
 
-### 📐 Cosine similarity 
+### Cosine similarity 
 
 The similarity between two vectors is computed as the cosine of the angle between them.
 
 Cosine similarity is **scale-invariant**: a vector and its scaled copy are considered identical. This means embedding magnitude does not affect ranking, only direction does. Pre-normalising your query vectors with `vector::normalize` is a good habit but not required — the math is the same either way.
 
-### 🔎 Search algorithm 
+### Search algorithm 
 
 Search is a **full linear scan**: every stored record is scored with cosine similarity against the query, the results are sorted, and the top *k* are returned. This is O(n × d) where *n* is the number of records and *d* is the embedding dimension.
 
@@ -241,7 +229,7 @@ cargo fmt --check
 cargo clippy
 ```
 
-### Expected output (`cargo run`) 🖥️
+### 🖥️ Expected output (`cargo run`) 
 
 ```
 ╔══════════════════════════════════════╗
